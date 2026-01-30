@@ -87,24 +87,33 @@ function App() {
 
     // Fetch fresh data in background
     const fetchViewCount = async () => {
+      console.log('Starting view counter fetch...');
       try {
         const response = await fetch('/api/views');
+        console.log('View counter fetch response status:', response.status, response.ok);
+        
         if (!response.ok) {
           const errorText = await response.text();
           console.error('View counter API error:', response.status, errorText);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         const data = await response.json();
         console.log('View counter API response:', data);
-        if (data.views !== undefined) {
+        
+        if (data.views !== undefined && typeof data.views === 'number') {
           console.log(`Updating view count from ${viewCount} to ${data.views}`);
           setViewCount(data.views);
           localStorage.setItem(CACHE_KEY, data.views.toString());
+          console.log('View count updated successfully');
         } else {
-          console.warn('View counter response missing views property:', data);
+          console.warn('View counter response missing or invalid views property:', data);
         }
       } catch (error) {
         console.error('View counter fetch failed:', error);
+        if (error instanceof Error) {
+          console.error('Error details:', error.message, error.stack);
+        }
         // Keep showing cached value or 0 if fetch fails
       }
     };
