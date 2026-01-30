@@ -53,9 +53,18 @@ export default async function handler(req: Request) {
     });
   } catch (error) {
     console.error('Error tracking views:', error);
-    return new Response(JSON.stringify({ error: 'Failed to track views' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
+    // Return a fallback response instead of error
+    // This ensures the view counter still shows even if blob storage fails
+    return new Response(JSON.stringify({ 
+      views: 0,
+      error: 'Failed to track views, using fallback',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 200, // Return 200 so frontend doesn't treat it as an error
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
     });
   }
 }

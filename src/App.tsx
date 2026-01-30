@@ -77,6 +77,9 @@ function App() {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       setViewCount(parseInt(cached, 10));
+    } else {
+      // Show 0 as fallback if no cache
+      setViewCount(0);
     }
 
     // Fetch fresh data in background
@@ -84,6 +87,8 @@ function App() {
       try {
         const response = await fetch('/api/views');
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error('View counter API error:', response.status, errorText);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
@@ -94,11 +99,8 @@ function App() {
           console.warn('View counter response missing views property:', data);
         }
       } catch (error) {
-        console.warn('View counter not available (this is normal in local dev):', error);
-        // If no cache and fetch fails, use fallback
-        if (!cached) {
-          setViewCount(null); // Don't show anything if we can't fetch
-        }
+        console.error('View counter fetch failed:', error);
+        // Keep showing cached value or 0 if fetch fails
       }
     };
 
@@ -167,16 +169,20 @@ function App() {
               </motion.p>
 
               {/* View counter */}
-              {viewCount !== null && (
-                <motion.p
-                  className="mt-3 text-sm md:text-base text-white/60 font-light tracking-wide"
-                  initial={{ opacity: 0 }}
-                  animate={showContent ? { opacity: 1 } : {}}
-                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] as const, delay: 0.6 }}
-                >
-                  {viewCount.toLocaleString()} {viewCount === 1 ? 'view' : 'views'}
-                </motion.p>
-              )}
+              <motion.p
+                className="mt-3 text-sm md:text-base text-white/60 font-light tracking-wide"
+                initial={{ opacity: 0 }}
+                animate={showContent ? { opacity: 1 } : {}}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] as const, delay: 0.6 }}
+              >
+                {viewCount !== null ? (
+                  <>
+                    {viewCount.toLocaleString()} {viewCount === 1 ? 'view' : 'views'}
+                  </>
+                ) : (
+                  'loading views...'
+                )}
+              </motion.p>
 
               {/* Scroll indicator */}
               <motion.div
