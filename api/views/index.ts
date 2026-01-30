@@ -69,8 +69,7 @@ export default async function handler(req: Request) {
     return new Response(JSON.stringify({ 
       views: 0,
       error: 'Failed to track views',
-      details: errorMessage,
-      debug: process.env.NODE_ENV === 'development' ? errorStack : undefined
+      details: errorMessage
     }), {
       status: 200, // Return 200 so frontend doesn't treat it as an error
       headers: { 
