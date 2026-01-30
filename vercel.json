@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/views/index.ts": {
+      "runtime": "nodejs"
+    }
+  }
+}
