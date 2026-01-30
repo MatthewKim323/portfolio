@@ -60,7 +60,7 @@ const GlassNav = ({ isVisible }: GlassNavProps) => {
         opacity: isVisible ? 1 : 0, 
         y: isVisible ? 0 : -20 
       }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }}
     >
       {/* Clean glass pill */}
       <div 

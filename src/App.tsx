@@ -136,7 +136,7 @@ function App() {
                 className="font-display text-6xl md:text-[10rem] font-semibold text-white tracking-tight leading-none"
                 initial={{ opacity: 0, y: 50 }}
                 animate={showContent ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] as const }}
               >
                 Matthew
               </motion.h1>
@@ -154,7 +154,7 @@ function App() {
                 className="mt-8 text-lg md:text-xl text-white/80 font-light tracking-widest uppercase"
                 initial={{ opacity: 0, y: 20 }}
                 animate={showContent ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] as const, delay: 0.4 }}
               >
                 Data Science & Economics
               </motion.p>
@@ -165,7 +165,7 @@ function App() {
                   className="mt-3 text-sm md:text-base text-white/60 font-light tracking-wide"
                   initial={{ opacity: 0 }}
                   animate={showContent ? { opacity: 1 } : {}}
-                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.6 }}
+                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] as const, delay: 0.6 }}
                 >
                   {viewCount.toLocaleString()} {viewCount === 1 ? 'view' : 'views'}
                 </motion.p>

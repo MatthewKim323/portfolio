@@ -53,7 +53,7 @@ const VideoBackground = ({
       className="absolute inset-0 w-full h-full overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: isVisible ? 1 : 0 }}
-      transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] as const }}
     >
       {/* Dark base */}
       <div className="absolute inset-0 bg-black" />

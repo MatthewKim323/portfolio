@@ -7,9 +7,7 @@ interface ProjectVideoProps {
 const ProjectVideo = ({ videoSrc }: ProjectVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   // Only load video when in view
   useEffect(() => {
@@ -18,7 +16,6 @@ const ProjectVideo = ({ videoSrc }: ProjectVideoProps) => {
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsInView(entry.isIntersecting);
         if (videoRef.current) {
           if (entry.isIntersecting) {
             videoRef.current.play().catch(() => {
@@ -49,9 +46,6 @@ const ProjectVideo = ({ videoSrc }: ProjectVideoProps) => {
     }
   };
 
-  const handleLoadedData = () => {
-    setIsLoaded(true);
-  };
 
   // Don't show error for projects without videos (empty video path)
   if (!videoSrc || videoSrc === '') {
@@ -78,7 +72,6 @@ const ProjectVideo = ({ videoSrc }: ProjectVideoProps) => {
         playsInline
         className="w-full h-full object-cover"
         onError={handleError}
-        onLoadedData={handleLoadedData}
         preload="auto"
         style={{ backgroundColor: '#000' }}
       >
