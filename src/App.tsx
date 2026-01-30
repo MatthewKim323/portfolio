@@ -76,9 +76,12 @@ function App() {
     // Show cached value immediately
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
-      setViewCount(parseInt(cached, 10));
+      const cachedCount = parseInt(cached, 10);
+      console.log(`Loading cached view count: ${cachedCount}`);
+      setViewCount(cachedCount);
     } else {
       // Show 0 as fallback if no cache
+      console.log('No cached view count, starting at 0');
       setViewCount(0);
     }
 
@@ -92,7 +95,9 @@ function App() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+        console.log('View counter API response:', data);
         if (data.views !== undefined) {
+          console.log(`Updating view count from ${viewCount} to ${data.views}`);
           setViewCount(data.views);
           localStorage.setItem(CACHE_KEY, data.views.toString());
         } else {
