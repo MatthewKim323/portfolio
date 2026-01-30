@@ -47,6 +47,7 @@ export default async function handler(req: Request) {
     const putResult = await put(blobName, newCount.toString(), {
       access: 'public',
       addRandomSuffix: false,
+      allowOverwrite: true, // Allow overwriting the existing blob to update the count
     });
     console.log(`Saved new count: ${newCount}, blob URL: ${putResult.url}`);
 
