@@ -82,15 +82,22 @@ function App() {
     // Fetch fresh data in background
     const fetchViewCount = async () => {
       try {
-        const response = await fetch('/.netlify/functions/views');
+        const response = await fetch('/api/views');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
-        setViewCount(data.views);
-        localStorage.setItem(CACHE_KEY, data.views.toString());
+        if (data.views !== undefined) {
+          setViewCount(data.views);
+          localStorage.setItem(CACHE_KEY, data.views.toString());
+        } else {
+          console.warn('View counter response missing views property:', data);
+        }
       } catch (error) {
-        console.error('Failed to fetch view count:', error);
+        console.warn('View counter not available (this is normal in local dev):', error);
         // If no cache and fetch fails, use fallback
         if (!cached) {
-          setViewCount(0);
+          setViewCount(null); // Don't show anything if we can't fetch
         }
       }
     };
