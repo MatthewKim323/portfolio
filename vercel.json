@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/views/index.ts": {
-      "runtime": "nodejs20.x"
-    }
-  }
-}
