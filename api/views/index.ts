@@ -21,27 +21,34 @@ export default async function handler(req: Request) {
     let currentCount = 0;
     try {
       const blobInfo = await head(blobName);
-      if (blobInfo) {
+      if (blobInfo && blobInfo.url) {
         // Fetch the blob content
         const response = await fetch(blobInfo.url);
         if (response.ok) {
           const text = await response.text();
           currentCount = parseInt(text, 10) || 0;
+          console.log(`Retrieved existing count: ${currentCount}`);
+        } else {
+          console.log(`Failed to fetch blob content: ${response.status}`);
         }
+      } else {
+        console.log('Blob does not exist yet, starting at 0');
       }
     } catch (error) {
       // Blob doesn't exist yet, start at 0
-      console.log('Creating new view counter blob');
+      console.log('Creating new view counter blob:', error instanceof Error ? error.message : 'Unknown error');
     }
 
     // Increment the count
     const newCount = currentCount + 1;
+    console.log(`Incrementing count from ${currentCount} to ${newCount}`);
 
     // Save the new count
-    await put(blobName, newCount.toString(), {
+    const putResult = await put(blobName, newCount.toString(), {
       access: 'public',
       addRandomSuffix: false,
     });
+    console.log(`Saved new count: ${newCount}, blob URL: ${putResult.url}`);
 
     // Return the new count
     return new Response(JSON.stringify({ views: newCount }), {
@@ -53,12 +60,16 @@ export default async function handler(req: Request) {
     });
   } catch (error) {
     console.error('Error tracking views:', error);
-    // Return a fallback response instead of error
-    // This ensures the view counter still shows even if blob storage fails
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('Error details:', { errorMessage, errorStack });
+    
+    // Return error details for debugging, but still return a response
     return new Response(JSON.stringify({ 
       views: 0,
-      error: 'Failed to track views, using fallback',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: 'Failed to track views',
+      details: errorMessage,
+      debug: process.env.NODE_ENV === 'development' ? errorStack : undefined
     }), {
       status: 200, // Return 200 so frontend doesn't treat it as an error
       headers: { 
