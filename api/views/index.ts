@@ -17,13 +17,22 @@ export default async function handler(req: Request) {
     // Get or create the view count blob
     const blobName = 'portfolio-views';
     
-    // Try to get existing count
+    // Try to get existing count with timeout
     let currentCount = 0;
     try {
-      const blobInfo = await head(blobName);
+      console.log('Attempting to get blob info...');
+      const blobInfo = await Promise.race([
+        head(blobName),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('head() timeout after 5s')), 5000)
+        )
+      ]) as Awaited<ReturnType<typeof head>>;
+      
       if (blobInfo && blobInfo.url) {
-        // Fetch the blob content
-        const response = await fetch(blobInfo.url);
+        console.log('Blob exists, fetching content...');
+        const response = await fetch(blobInfo.url, {
+          signal: AbortSignal.timeout(5000) // 5 second timeout
+        });
         if (response.ok) {
           const text = await response.text();
           currentCount = parseInt(text, 10) || 0;
@@ -35,20 +44,27 @@ export default async function handler(req: Request) {
         console.log('Blob does not exist yet, starting at 0');
       }
     } catch (error) {
-      // Blob doesn't exist yet, start at 0
-      console.log('Creating new view counter blob:', error instanceof Error ? error.message : 'Unknown error');
+      // Blob doesn't exist yet or timeout, start at 0
+      console.log('Error getting blob (will start at 0):', error instanceof Error ? error.message : 'Unknown error');
     }
 
     // Increment the count
     const newCount = currentCount + 1;
     console.log(`Incrementing count from ${currentCount} to ${newCount}`);
 
-    // Save the new count
-    const putResult = await put(blobName, newCount.toString(), {
-      access: 'public',
-      addRandomSuffix: false,
-      allowOverwrite: true, // Allow overwriting the existing blob to update the count
-    });
+    // Save the new count with timeout
+    console.log('Attempting to save blob...');
+    const putResult = await Promise.race([
+      put(blobName, newCount.toString(), {
+        access: 'public',
+        addRandomSuffix: false,
+        allowOverwrite: true,
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('put() timeout after 5s')), 5000)
+      )
+    ]) as Awaited<ReturnType<typeof put>>;
+    
     console.log(`Saved new count: ${newCount}, blob URL: ${putResult.url}`);
 
     // Return the new count
