@@ -89,7 +89,15 @@ function App() {
     const fetchViewCount = async () => {
       console.log('Starting view counter fetch...');
       try {
-        const response = await fetch('/api/views');
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        const response = await fetch('/api/views', {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        
         console.log('View counter fetch response status:', response.status, response.ok);
         
         if (!response.ok) {
@@ -98,8 +106,18 @@ function App() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        const data = await response.json();
-        console.log('View counter API response:', data);
+        const responseText = await response.text();
+        console.log('View counter API raw response:', responseText);
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Failed to parse JSON response:', parseError, 'Response:', responseText);
+          throw new Error('Invalid JSON response');
+        }
+        
+        console.log('View counter API parsed response:', data);
         
         if (data.views !== undefined && typeof data.views === 'number') {
           console.log(`Updating view count from ${viewCount} to ${data.views}`);
@@ -112,7 +130,11 @@ function App() {
       } catch (error) {
         console.error('View counter fetch failed:', error);
         if (error instanceof Error) {
-          console.error('Error details:', error.message, error.stack);
+          console.error('Error name:', error.name);
+          console.error('Error message:', error.message);
+          if (error.name === 'AbortError') {
+            console.error('Request timed out after 10 seconds');
+          }
         }
         // Keep showing cached value or 0 if fetch fails
       }
