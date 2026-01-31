@@ -89,14 +89,16 @@ function App() {
     const fetchViewCount = async () => {
       console.log('Starting view counter fetch...');
       try {
-        // Add timeout to prevent hanging
+        // Add timeout to prevent hanging - increased to 30 seconds since blob operations can be slow
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
         
+        console.log('Fetching from /api/views/index...');
         const response = await fetch('/api/views/index', {
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
+        console.log('Fetch completed, status:', response.status);
         
         console.log('View counter fetch response status:', response.status, response.ok);
         
