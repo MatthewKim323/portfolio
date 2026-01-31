@@ -15,7 +15,6 @@ function App() {
   const [showVideo, setShowVideo] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [isScrollingEnabled, setIsScrollingEnabled] = useState(false);
-  const [viewCount, setViewCount] = useState<number | null>(null);
 
   const heroRef = useRef(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -68,85 +67,6 @@ function App() {
       document.body.style.overflow = 'hidden';
     }
   }, [isScrollingEnabled]);
-
-  // View counter - show cached value first, then fetch fresh
-  useEffect(() => {
-    const CACHE_KEY = 'portfolio_views_cache';
-
-    // Show cached value immediately
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) {
-      const cachedCount = parseInt(cached, 10);
-      console.log(`Loading cached view count: ${cachedCount}`);
-      setViewCount(cachedCount);
-    } else {
-      // Show 0 as fallback if no cache
-      console.log('No cached view count, starting at 0');
-      setViewCount(0);
-    }
-
-    // Fetch fresh data in background
-    const fetchViewCount = async () => {
-      console.log('Starting view counter fetch...');
-      try {
-        // Add timeout to prevent hanging - increased to 30 seconds since blob operations can be slow
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-        
-        console.log('Fetching from /api/views/index...');
-        const response = await fetch('/api/views/index', {
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        console.log('Fetch completed, status:', response.status);
-        
-        console.log('View counter fetch response status:', response.status, response.ok);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('View counter API error:', response.status, errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const responseText = await response.text();
-        console.log('View counter API raw response:', responseText);
-        
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('Failed to parse JSON response:', parseError, 'Response:', responseText);
-          throw new Error('Invalid JSON response');
-        }
-        
-        console.log('View counter API parsed response:', data);
-        
-        console.log('Checking data.views:', data.views, 'type:', typeof data.views);
-        if (data.views !== undefined && typeof data.views === 'number') {
-          console.log(`Updating view count from ${viewCount} to ${data.views}`);
-          setViewCount(data.views);
-          localStorage.setItem(CACHE_KEY, data.views.toString());
-          console.log('View count state updated to:', data.views);
-          console.log('localStorage set to:', data.views.toString());
-        } else {
-          console.warn('View counter response missing or invalid views property:', data);
-          console.warn('data.views value:', data.views, 'type:', typeof data.views);
-        }
-      } catch (error) {
-        console.error('View counter fetch failed:', error);
-        if (error instanceof Error) {
-          console.error('Error name:', error.name);
-          console.error('Error message:', error.message);
-          if (error.name === 'AbortError') {
-            console.error('Request timed out after 10 seconds');
-          }
-        }
-        // Keep showing cached value or 0 if fetch fails
-      }
-    };
-
-    fetchViewCount();
-  }, []);
 
   return (
     <div
