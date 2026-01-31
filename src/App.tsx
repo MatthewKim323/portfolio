@@ -129,22 +129,6 @@ function App() {
                 Data Science & Economics
               </motion.p>
 
-              {/* View counter */}
-              <motion.p
-                className="mt-3 text-sm md:text-base text-white/60 font-light tracking-wide"
-                initial={{ opacity: 0 }}
-                animate={showContent ? { opacity: 1 } : {}}
-                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] as const, delay: 0.6 }}
-              >
-                {viewCount !== null && viewCount !== undefined ? (
-                  <>
-                    {viewCount.toLocaleString()} {viewCount === 1 ? 'view' : 'views'}
-                  </>
-                ) : (
-                  'loading views...'
-                )}
-              </motion.p>
-
               {/* Scroll indicator */}
               <motion.div
                 className="absolute bottom-12 left-1/2 -translate-x-1/2"
