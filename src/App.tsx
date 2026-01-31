@@ -119,13 +119,16 @@ function App() {
         
         console.log('View counter API parsed response:', data);
         
+        console.log('Checking data.views:', data.views, 'type:', typeof data.views);
         if (data.views !== undefined && typeof data.views === 'number') {
           console.log(`Updating view count from ${viewCount} to ${data.views}`);
           setViewCount(data.views);
           localStorage.setItem(CACHE_KEY, data.views.toString());
-          console.log('View count updated successfully');
+          console.log('View count state updated to:', data.views);
+          console.log('localStorage set to:', data.views.toString());
         } else {
           console.warn('View counter response missing or invalid views property:', data);
+          console.warn('data.views value:', data.views, 'type:', typeof data.views);
         }
       } catch (error) {
         console.error('View counter fetch failed:', error);
@@ -211,7 +214,7 @@ function App() {
                 animate={showContent ? { opacity: 1 } : {}}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] as const, delay: 0.6 }}
               >
-                {viewCount !== null ? (
+                {viewCount !== null && viewCount !== undefined ? (
                   <>
                     {viewCount.toLocaleString()} {viewCount === 1 ? 'view' : 'views'}
                   </>
