@@ -94,35 +94,35 @@ const About = () => {
                 className="text-sm md:text-base lg:text-lg leading-relaxed"
                 style={{ color: isDarkMode ? 'var(--color-muted-dark, #9ca3af)' : 'var(--color-muted-light, #6b7280)' }}
                 dangerouslySetInnerHTML={{
-                  __html: `Hey, I'm <span style="color: ${isDarkMode ? '#fff' : '#1a1f1c'}; font-weight: 500">Matt</span>!`
+                  __html: `hey, i'm <span style="color: ${isDarkMode ? '#fff' : '#1a1f1c'}; font-weight: 500">matt</span>!`
                 }}
               />
               <p 
                 className="text-sm md:text-base lg:text-lg leading-relaxed"
                 style={{ color: isDarkMode ? 'var(--color-muted-dark, #9ca3af)' : 'var(--color-muted-light, #6b7280)' }}
                 dangerouslySetInnerHTML={{
-                  __html: `A <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">Data Science & Economics</strong> double major at <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">UCSB</strong> who loves finding patterns in chaos and turning data into things I can actually use.`
+                  __html: `a <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">data science & economics</strong> double major at <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">UCSB</strong> who loves finding patterns in chaos and turning data into things i can actually use.`
                 }}
               />
               <p 
                 className="text-sm md:text-base lg:text-lg leading-relaxed"
                 style={{ color: isDarkMode ? 'var(--color-muted-dark, #9ca3af)' : 'var(--color-muted-light, #6b7280)' }}
                 dangerouslySetInnerHTML={{
-                  __html: `Most of what I build starts from my own life. I'm constantly using data to make better decisions, whether that's optimizing training for hypertrophy, figuring out the most nutrient-dense meals, or building tools that save time and remove guesswork. I like messy, real-world data, especially when the goal isn't just analysis, but <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">action</strong>.`
+                  __html: `most of what i build starts from my own life. i'm constantly using data to make better decisions, whether that's optimizing training for hypertrophy, figuring out the most nutrient dense meals, or building tools that save time and remove guesswork. i like messy, real-world data, especially when the goal isn't just analysis, but <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">action</strong>.`
                 }}
               />
               <p 
                 className="text-sm md:text-base lg:text-lg leading-relaxed"
                 style={{ color: isDarkMode ? 'var(--color-muted-dark, #9ca3af)' : 'var(--color-muted-light, #6b7280)' }}
                 dangerouslySetInnerHTML={{
-                  __html: `Recently, I've been particularly invested in using <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">simulation data</strong> to model complex systems and <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">train</strong> models in controlled environments, where strategies can be tested, iterated on, and stress-tested before being applied in the real world. A lot of my work sits at the intersection of data analysis and applied machine learning, and I'm interested in how models can be trained to make smarter decisions under uncertainty. I enjoy building <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">end-to-end systems</strong>, from collecting or generating data to modeling it and turning the results into something <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">interactive and useful</strong>.`
+                  __html: `recently i've been particularly invested in using <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">simulation data</strong> to model complex systems and <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">train</strong> models in controlled environments, where strategies can be tested, iterated on, and stress-tested before being applied in the real world. a lot of my work sits at the intersection of data analysis, applied machine learning, and i'm interested in how models can be trained to make smarter decisions under uncertainty. i enjoy building <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">end-to-end systems</strong>, from collecting or generating data to modeling it and turning the results into something <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">interactive and useful</strong>.`
                 }}
               />
               <p 
                 className="text-sm md:text-base lg:text-lg leading-relaxed"
                 style={{ color: isDarkMode ? 'var(--color-muted-dark, #9ca3af)' : 'var(--color-muted-light, #6b7280)' }}
               >
-                Outside of code and data, you'll find me hiking, hitting lifts, putting on tough fits, or exploring new sights with friends and family.
+                outside of code and data, you'll find me hiking, hitting lifts, putting on tough fits, or exploring new sights with friends and family.
               </p>
             </motion.div>
 
