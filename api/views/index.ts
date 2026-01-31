@@ -56,33 +56,32 @@ export default async function handler(req: Request) {
     const newCount = currentCount + 1;
     console.log(`Incrementing count from ${currentCount} to ${newCount}`);
 
-    // Save the new count with timeout
+    // Save the new count with timeout - but don't wait for it to complete before returning
     console.log('Attempting to save blob...');
-    const putResult = await Promise.race([
-      put(blobName, newCount.toString(), {
-        access: 'public',
-        addRandomSuffix: false,
-        allowOverwrite: true,
-      }),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('put() timeout after 5s')), 5000)
-      )
-    ]) as Awaited<ReturnType<typeof put>>;
     
-    console.log(`Saved new count: ${newCount}, blob URL: ${putResult.url}`);
-
-    // Return the new count
+    // Return response immediately, save blob in background
     const responseBody = JSON.stringify({ views: newCount });
-    console.log('Returning response:', responseBody);
-    const response = new Response(responseBody, {
+    console.log('Returning response immediately:', responseBody);
+    
+    // Start the save operation but don't await it
+    put(blobName, newCount.toString(), {
+      access: 'public',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+    }).then((putResult) => {
+      console.log(`Saved new count: ${newCount}, blob URL: ${putResult.url}`);
+    }).catch((error) => {
+      console.error('Error saving blob (non-blocking):', error);
+    });
+    
+    // Return immediately with the new count
+    return new Response(responseBody, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
     });
-    console.log('Response created, returning...');
-    return response;
   } catch (error) {
     console.error('Error tracking views:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
