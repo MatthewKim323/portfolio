@@ -71,7 +71,7 @@ const projects: Project[] = [
     techStack: ['React', 'TypeScript', 'Node.js', 'Three.js', 'WebSockets', 'MongoDB'],
     githubLink: 'https://devpost.com/software/flow-8pgm1k',
     liveLink: 'https://flow.stephenhung.me',
-    video: 'https://8dsyyhtinkjxejan.public.blob.vercel-storage.com/flow.mp4',
+    video: '/media/projects/video/flow.mp4',
             icon: '/media/project_icons/sbhacks_logo.png',
     iconSize: '85%',
     keepIconColors: false,

@@ -91,7 +91,7 @@ function App() {
         >
           {/* Video background with fade-in */}
           <VideoBackground 
-            videoSrc="https://8dsyyhtinkjxejan.public.blob.vercel-storage.com/hero-video.mp4" 
+            videoSrc="/media/portfolio_video.mp4" 
             isVisible={showVideo}
           />
 
