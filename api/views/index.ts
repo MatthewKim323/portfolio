@@ -5,14 +5,18 @@ export const config = {
 };
 
 export default async function handler(req: Request) {
+  console.log('Function called, method:', req.method);
+  
   // Only allow GET requests
   if (req.method !== 'GET') {
+    console.log('Method not allowed:', req.method);
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
+  console.log('Processing GET request...');
   try {
     // Get or create the view count blob
     const blobName = 'portfolio-views';
@@ -68,13 +72,17 @@ export default async function handler(req: Request) {
     console.log(`Saved new count: ${newCount}, blob URL: ${putResult.url}`);
 
     // Return the new count
-    return new Response(JSON.stringify({ views: newCount }), {
+    const responseBody = JSON.stringify({ views: newCount });
+    console.log('Returning response:', responseBody);
+    const response = new Response(responseBody, {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       },
     });
+    console.log('Response created, returning...');
+    return response;
   } catch (error) {
     console.error('Error tracking views:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
