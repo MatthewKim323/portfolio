@@ -72,6 +72,7 @@ const projects: Project[] = [
     githubLink: 'https://github.com/MatthewKim323/portfolio',
     liveLink: 'https://mykm.dev',
     video: '/media/projects/video/videovideo.mp4',
+    icon: '/media/matt_favicon.png',
     ribbonType: 'project',
     githubLabel: 'view code',
     liveLinkLabel: 'live site',
