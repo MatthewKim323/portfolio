@@ -36,10 +36,11 @@ const projects: Project[] = [
     subtitle: 'automated RL tft bot',
     description: [
       'in progress...',
+      'dashboard complete..',
     ],
     techStack: ['Python', 'RL', 'OpenCV'],
     githubLink: 'https://github.com/MatthewKim323/tft',
-    video: '/media/projects/video/solving-tft.mp4',
+    video: '/media/projects/video/tft_frontend_video.mp4',
     icon: '/media/project_icons/tft_icon.png',
     ribbonType: 'in progress',
     githubLabel: 'view code',
