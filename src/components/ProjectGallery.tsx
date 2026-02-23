@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useDarkMode } from '../contexts/DarkModeContext';
-import RibbonBadge from './RibbonBadge';
 import ProjectVideo from './ProjectVideo';
 
 interface Project {
@@ -393,8 +392,6 @@ const ProjectGallery = ({ projects, mirrored = false }: ProjectGalleryProps) => 
                             : 'inset 0 2px 15px rgba(0,0,0,0.15), inset 0 0 30px rgba(0,0,0,0.18)',
                         }}
                       />
-                      {/* Ribbon badge */}
-                      {project.ribbonType && <RibbonBadge type={project.ribbonType} />}
                     </div>
                   </div>
 
