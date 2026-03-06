@@ -1,4 +1,4 @@
-import { motion, useInView, useMotionValue, useVelocity, useSpring, useTransform, MotionValue } from 'framer-motion';
+import { motion, useInView, useMotionValue, useTransform, MotionValue } from 'framer-motion';
 import { useRef, useEffect } from 'react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 
@@ -62,8 +62,7 @@ const ImageColumn = ({
   </motion.div>
 );
 
-const TiltGallery = ({ sectionRef }: { sectionRef: React.RefObject<HTMLElement | null> }) => {
-  const rawScrollY = useMotionValue(0);
+const ScrollGallery = ({ sectionRef }: { sectionRef: React.RefObject<HTMLElement | null> }) => {
   const progress = useMotionValue(0);
 
   useEffect(() => {
@@ -74,20 +73,12 @@ const TiltGallery = ({ sectionRef }: { sectionRef: React.RefObject<HTMLElement |
       const section = sectionRef.current;
       if (!section) return;
 
-      const scrollTop = container.scrollTop;
-      rawScrollY.set(scrollTop);
-
-      // Use getBoundingClientRect for accurate position within the custom scroll container
       const containerRect = container.getBoundingClientRect();
       const sectionRect = section.getBoundingClientRect();
-
-      // relTop: how far the section top is from the container's top edge
       const relTop = sectionRect.top - containerRect.top;
       const viewH = container.clientHeight;
       const secH = sectionRect.height;
 
-      // p = 0 when section bottom just enters the viewport bottom
-      // p = 1 when section top just exits the viewport top
       const p = (viewH - relTop) / (viewH + secH);
       progress.set(Math.min(1, Math.max(0, p)));
     };
@@ -95,23 +86,14 @@ const TiltGallery = ({ sectionRef }: { sectionRef: React.RefObject<HTMLElement |
     container.addEventListener('scroll', update, { passive: true });
     update();
     return () => container.removeEventListener('scroll', update);
-  }, [rawScrollY, progress, sectionRef]);
+  }, [progress, sectionRef]);
 
-  // Velocity-driven tilt from the raw scroll position
-  const velocity = useVelocity(rawScrollY);
-  const smoothVelocity = useSpring(velocity, { stiffness: 50, damping: 30, mass: 0.5 });
-  const rotateX = useTransform(smoothVelocity, [-3000, 0, 3000], [14, 0, -14]);
-
-  // Columns travel in opposite directions, mapped directly from scroll progress
   const col1Y = useTransform(progress, [0, 1], [0, -700]);
   const col2Y = useTransform(progress, [0, 1], [-320, 380]);
   const col3Y = useTransform(progress, [0, 1], [0, -550]);
 
   return (
-    <div
-      className="relative w-full h-full overflow-hidden"
-      style={{ perspective: '1400px' }}
-    >
+    <div className="relative w-full h-full overflow-hidden">
       {/* Top fade */}
       <div
         className="absolute inset-x-0 top-0 z-10 pointer-events-none"
@@ -123,14 +105,11 @@ const TiltGallery = ({ sectionRef }: { sectionRef: React.RefObject<HTMLElement |
         style={{ height: '120px', background: 'linear-gradient(to top, var(--gallery-fade), transparent)' }}
       />
 
-      <motion.div
-        className="flex h-full items-start"
-        style={{ rotateX, gap: `${GAP}px`, padding: '0 2px', transformOrigin: 'center 50%' }}
-      >
+      <div className="flex h-full items-start" style={{ gap: `${GAP}px`, padding: '0 2px' }}>
         <ImageColumn images={col1} y={col1Y} startOffset={-60} />
         <ImageColumn images={col2} y={col2Y} startOffset={0} />
         <ImageColumn images={col3} y={col3Y} startOffset={-130} />
-      </motion.div>
+      </div>
     </div>
   );
 };
@@ -226,13 +205,17 @@ const About = () => {
             <motion.div variants={itemVariants} className="mt-8 h-px w-16" style={{ backgroundColor: '#4ade80' }} />
           </motion.div>
 
-          {/* Right — Tilt Gallery, top-aligned to just below the heading */}
-          <div
+          {/* Right — Scroll Gallery, fades in with the section */}
+          <motion.div
             className="hidden md:block"
             style={{ height: '900px' }}
+            initial={{ opacity: 0, y: 40 }}
+            animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
           >
-            <TiltGallery sectionRef={sectionRef} />
-          </div>
+            <ScrollGallery sectionRef={sectionRef} />
+          </motion.div>
+
         </div>
       </div>
     </section>
