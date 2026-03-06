@@ -31,20 +31,6 @@ interface Project {
 
 const projects: Project[] = [
   {
-    id: 'solving-tft',
-    title: 'solving tft.',
-    subtitle: 'automated RL tft bot',
-    description: [
-      'in progress...',
-      'dashboard complete..',
-    ],
-    techStack: ['Python', 'RL', 'OpenCV'],
-    githubLink: 'https://github.com/MatthewKim323/tft',
-    video: '/media/projects/video/tft_frontend_video.mp4',
-    icon: '/media/project_icons/tft_icon.png',
-    githubLabel: 'view code',
-  },
-  {
     id: 'ucsb-rec',
     title: 'ucsb rec cen tracker.',
     subtitle: 'improving ucsb rec cen live tracking',
@@ -71,6 +57,7 @@ const projects: Project[] = [
     githubLink: 'https://github.com/MatthewKim323/tapn',
     liveLink: 'https://devpost.com/software/tapn-dcwl9y',
     video: '/media/projects/video/tapn.mp4',
+    icon: '/media/project_icons/tapn_icon.png',
     githubLabel: 'github',
     liveLinkLabel: 'devpost',
   },

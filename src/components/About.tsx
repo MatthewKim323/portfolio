@@ -1,124 +1,221 @@
-import { motion, useInView } from 'framer-motion';
-import { useRef, useState } from 'react';
+import { motion, useInView, useMotionValue, useVelocity, useSpring, useTransform, MotionValue } from 'framer-motion';
+import { useRef, useEffect } from 'react';
 import { useDarkMode } from '../contexts/DarkModeContext';
+
+const allImages = [
+  '/media/about/IMG_1373.JPG',
+  '/media/about/IMG_2343.jpg',
+  '/media/about/IMG_4227.JPG.JPEG',
+  '/media/about/IMG_5060.JPEG',
+  '/media/about/IMG_6390.JPG',
+  '/media/about/IMG_9416.jpg',
+  '/media/about/matt_fashion.jpg',
+  '/media/about/matt_gf.jpg',
+  '/media/about/matt_hike.jpg',
+  '/media/about/matt_muscle.jpg',
+  '/media/about/matt_retreat.jpg',
+  '/media/about/matt_tn.jpg',
+];
+
+const col1Imgs = allImages.filter((_, i) => i % 3 === 0);
+const col2Imgs = allImages.filter((_, i) => i % 3 === 1);
+const col3Imgs = allImages.filter((_, i) => i % 3 === 2);
+
+const looped = (arr: string[]) => [...arr, ...arr, ...arr];
+const col1 = looped(col1Imgs);
+const col2 = looped(col2Imgs);
+const col3 = looped(col3Imgs);
+
+const IMG_H = 220;
+const GAP = 10;
+
+const ImageColumn = ({
+  images,
+  y,
+  startOffset = 0,
+}: {
+  images: string[];
+  y: MotionValue<number>;
+  startOffset?: number;
+}) => (
+  <motion.div
+    className="flex-1 min-w-0 flex flex-col"
+    style={{ y, marginTop: startOffset, gap: `${GAP}px` }}
+  >
+    {images.map((src, i) => (
+      <div
+        key={i}
+        className="w-full overflow-hidden rounded-xl shrink-0"
+        style={{ height: `${IMG_H}px` }}
+      >
+        <img
+          src={src}
+          alt=""
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={(e) => {
+            (e.currentTarget.parentElement as HTMLElement).style.display = 'none';
+          }}
+        />
+      </div>
+    ))}
+  </motion.div>
+);
+
+const TiltGallery = ({ sectionRef }: { sectionRef: React.RefObject<HTMLElement | null> }) => {
+  const rawScrollY = useMotionValue(0);
+  const progress = useMotionValue(0);
+
+  useEffect(() => {
+    const container = document.querySelector('.scroll-container') as HTMLElement | null;
+    if (!container) return;
+
+    const update = () => {
+      const section = sectionRef.current;
+      if (!section) return;
+
+      const scrollTop = container.scrollTop;
+      rawScrollY.set(scrollTop);
+
+      // Use getBoundingClientRect for accurate position within the custom scroll container
+      const containerRect = container.getBoundingClientRect();
+      const sectionRect = section.getBoundingClientRect();
+
+      // relTop: how far the section top is from the container's top edge
+      const relTop = sectionRect.top - containerRect.top;
+      const viewH = container.clientHeight;
+      const secH = sectionRect.height;
+
+      // p = 0 when section bottom just enters the viewport bottom
+      // p = 1 when section top just exits the viewport top
+      const p = (viewH - relTop) / (viewH + secH);
+      progress.set(Math.min(1, Math.max(0, p)));
+    };
+
+    container.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => container.removeEventListener('scroll', update);
+  }, [rawScrollY, progress, sectionRef]);
+
+  // Velocity-driven tilt from the raw scroll position
+  const velocity = useVelocity(rawScrollY);
+  const smoothVelocity = useSpring(velocity, { stiffness: 50, damping: 30, mass: 0.5 });
+  const rotateX = useTransform(smoothVelocity, [-3000, 0, 3000], [14, 0, -14]);
+
+  // Columns travel in opposite directions, mapped directly from scroll progress
+  const col1Y = useTransform(progress, [0, 1], [0, -700]);
+  const col2Y = useTransform(progress, [0, 1], [-320, 380]);
+  const col3Y = useTransform(progress, [0, 1], [0, -550]);
+
+  return (
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{ perspective: '1400px' }}
+    >
+      {/* Top fade */}
+      <div
+        className="absolute inset-x-0 top-0 z-10 pointer-events-none"
+        style={{ height: '120px', background: 'linear-gradient(to bottom, var(--gallery-fade), transparent)' }}
+      />
+      {/* Bottom fade */}
+      <div
+        className="absolute inset-x-0 bottom-0 z-10 pointer-events-none"
+        style={{ height: '120px', background: 'linear-gradient(to top, var(--gallery-fade), transparent)' }}
+      />
+
+      <motion.div
+        className="flex h-full items-start"
+        style={{ rotateX, gap: `${GAP}px`, padding: '0 2px', transformOrigin: 'center 50%' }}
+      >
+        <ImageColumn images={col1} y={col1Y} startOffset={-60} />
+        <ImageColumn images={col2} y={col2Y} startOffset={0} />
+        <ImageColumn images={col3} y={col3Y} startOffset={-130} />
+      </motion.div>
+    </div>
+  );
+};
 
 const About = () => {
   const { isDarkMode } = useDarkMode();
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-20% 0px -20% 0px" });
-  const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
-  const [hoveredPhoto, setHoveredPhoto] = useState<number | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const textRef = useRef(null);
+  const inView = useInView(textRef, { once: true, margin: '-20% 0px -20% 0px' });
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1, 
-      transition: { 
-        staggerChildren: 0.1,
-        delayChildren: 0.1
-      } 
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const } 
-    },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const } },
   };
 
-  // Your photos with positions/rotations for table spread effect - moved up and added 2 new ones below
-  const photos = [
-    { src: '/media/about/matt_fashion.jpg', rotation: -12, x: -120, y: 165 },
-    { src: '/media/about/matt_muscle.jpg', rotation: 15, x: 135, y: 145 },
-    { src: '/media/about/matt_hike.jpg', rotation: -8, x: -140, y: 365 },
-    { src: '/media/about/matt_gf.jpg', rotation: 10, x: 155, y: 345 },
-    { src: '/media/about/matt_tn.jpg', rotation: -10, x: -100, y: 565 },
-    { src: '/media/about/matt_retreat.jpg', rotation: 12, x: 145, y: 545 },
-  ];
+  const galleryFade = isDarkMode ? '#0d1210' : '#f5f2ed';
 
   return (
-    <section 
-      id="about" 
-      ref={ref} 
-      className="relative min-h-screen w-screen flex items-center py-24 md:py-32"
+    <section
+      id="about"
+      ref={sectionRef}
+      className="relative w-screen py-24 md:py-32"
+      style={{ '--gallery-fade': galleryFade } as React.CSSProperties}
     >
-      {/* Background */}
       <motion.div
         className="absolute inset-0 -z-10"
-        animate={{ 
-          backgroundColor: isDarkMode ? 'var(--color-bg-dark, #0d1210)' : 'var(--color-bg-light, #f5f2ed)' 
-        }}
+        animate={{ backgroundColor: isDarkMode ? 'var(--color-bg-dark, #0d1210)' : 'var(--color-bg-light, #f5f2ed)' }}
         transition={{ duration: 0.5 }}
       />
 
-      <div className="w-full max-w-6xl mx-auto px-8 md:pl-4 md:pr-12">
-        <motion.div
-          initial="hidden"
-          animate={inView ? "visible" : "hidden"}
-          variants={containerVariants}
-          className="grid grid-cols-1 md:grid-cols-[48%_52%] gap-12 md:gap-12 items-center"
-        >
-          {/* Left side - Text Content */}
+      <div className="w-full max-w-6xl mx-auto px-8 md:pl-4 md:pr-0">
+        <div className="grid grid-cols-1 md:grid-cols-[50%_50%] items-start">
+
+          {/* Left — Text */}
           <motion.div
+            ref={textRef}
+            initial="hidden"
+            animate={inView ? 'visible' : 'hidden'}
             variants={containerVariants}
-            className="order-2 md:order-1 md:-ml-8"
-            style={{ maxWidth: '100%' }}
+            className="md:-ml-8 md:pr-12"
           >
-            {/* Section label */}
-            <motion.span 
+            <motion.span
               variants={itemVariants}
               className="inline-block text-sm tracking-[0.3em] uppercase mb-6"
               style={{ color: isDarkMode ? '#4ade80' : '#22c55e' }}
             >
               About
             </motion.span>
-            
-            {/* Main heading */}
-            <motion.h2 
+
+            <motion.h2
               variants={itemVariants}
               className="font-display text-4xl md:text-6xl lg:text-7xl font-semibold leading-tight mb-10"
               style={{ color: isDarkMode ? 'var(--color-text-dark, #e8e4dc)' : 'var(--color-text-light, #1a1f1c)' }}
             >
               building things<br />
-              <span style={{ color: '#4ade80' }}>
-                for what i love.
-              </span>
+              <span style={{ color: '#4ade80' }}>for what i love.</span>
             </motion.h2>
 
-            {/* Bio paragraphs */}
             <motion.div variants={itemVariants} className="space-y-6">
-              <p 
+              <p
                 className="text-sm md:text-base lg:text-lg leading-relaxed"
                 style={{ color: isDarkMode ? 'var(--color-muted-dark, #9ca3af)' : 'var(--color-muted-light, #6b7280)' }}
-                dangerouslySetInnerHTML={{
-                  __html: `hey, i'm <span style="color: ${isDarkMode ? '#fff' : '#1a1f1c'}; font-weight: 500">matt</span>!`
-                }}
+                dangerouslySetInnerHTML={{ __html: `hey, i'm <span style="color: ${isDarkMode ? '#fff' : '#1a1f1c'}; font-weight: 500">matt</span>!` }}
               />
-              <p 
+              <p
                 className="text-sm md:text-base lg:text-lg leading-relaxed"
                 style={{ color: isDarkMode ? 'var(--color-muted-dark, #9ca3af)' : 'var(--color-muted-light, #6b7280)' }}
-                dangerouslySetInnerHTML={{
-                  __html: `a <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">data science & economics</strong> double major at <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">UCSB</strong> who loves finding patterns in chaos and turning data into things i can actually use.`
-                }}
+                dangerouslySetInnerHTML={{ __html: `a <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">data science & economics</strong> double major at <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">UCSB</strong> who loves finding patterns in chaos and turning data into things i can actually use.` }}
               />
-              <p 
+              <p
                 className="text-sm md:text-base lg:text-lg leading-relaxed"
                 style={{ color: isDarkMode ? 'var(--color-muted-dark, #9ca3af)' : 'var(--color-muted-light, #6b7280)' }}
-                dangerouslySetInnerHTML={{
-                  __html: `most of what i build starts from my own life. i'm constantly using data to make better decisions, whether that's optimizing training for hypertrophy, figuring out the most nutrient dense meals, or building tools that save time and remove guesswork. i like messy, real-world data, especially when the goal isn't just analysis, but <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">action</strong>.`
-                }}
+                dangerouslySetInnerHTML={{ __html: `most of what i build starts from my own life. i'm constantly using data to make better decisions, whether that's optimizing training for hypertrophy, figuring out the most nutrient dense meals, or building tools that save time and remove guesswork. i like messy, real-world data, especially when the goal isn't just analysis, but <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">action</strong>.` }}
               />
-              <p 
+              <p
                 className="text-sm md:text-base lg:text-lg leading-relaxed"
                 style={{ color: isDarkMode ? 'var(--color-muted-dark, #9ca3af)' : 'var(--color-muted-light, #6b7280)' }}
-                dangerouslySetInnerHTML={{
-                  __html: `recently i've been particularly invested in using <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">simulation data</strong> to model complex systems and <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">train</strong> models in controlled environments, where strategies can be tested, iterated on, and stress-tested before being applied in the real world. a lot of my work sits at the intersection of data analysis, applied machine learning, and i'm interested in how models can be trained to make smarter decisions under uncertainty. i enjoy building <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">end-to-end systems</strong>, from collecting or generating data to modeling it and turning the results into something <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">interactive and useful</strong>.`
-                }}
+                dangerouslySetInnerHTML={{ __html: `recently i've been particularly interested in building <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">agentic systems</strong> and <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">autonomous pipelines</strong> that can take real-world tasks and run them end-to-end. instead of tools that simply analyze data, i like building systems that can <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">observe</strong>, <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">decide</strong>, and <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">act</strong>, turning workflows that normally take hours of manual effort into automated processes that run in the background. a lot of my work sits at the intersection of data analysis, applied machine learning, and <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">agent orchestration</strong>, where the goal is to design systems that make smarter decisions and meaningfully <strong style="color: ${isDarkMode ? '#d4d4d4' : '#1a1f1c'}">improve everyday life</strong>.` }}
               />
-              <p 
+              <p
                 className="text-sm md:text-base lg:text-lg leading-relaxed"
                 style={{ color: isDarkMode ? 'var(--color-muted-dark, #9ca3af)' : 'var(--color-muted-light, #6b7280)' }}
               >
@@ -126,83 +223,18 @@ const About = () => {
               </p>
             </motion.div>
 
-            {/* Decorative line */}
-            <motion.div 
-              variants={itemVariants}
-              className="mt-8 h-px w-16"
-              style={{ backgroundColor: '#4ade80' }}
-            />
+            <motion.div variants={itemVariants} className="mt-8 h-px w-16" style={{ backgroundColor: '#4ade80' }} />
           </motion.div>
 
-          {/* Right side - Photo Table Spread */}
-          <motion.div 
-            variants={itemVariants}
-            className="relative order-1 md:order-2"
-            style={{ minHeight: '900px', width: '100%' }}
+          {/* Right — Tilt Gallery, top-aligned to just below the heading */}
+          <div
+            className="hidden md:block"
+            style={{ height: '900px' }}
           >
-            <div className="relative w-full h-full flex items-start justify-center" style={{ paddingTop: '40px' }}>
-              {photos.map((photo, index) => (
-                <motion.div
-                  key={index}
-                  className="absolute cursor-pointer"
-                  initial={{ 
-                    x: photo.x,
-                    y: photo.y,
-                    rotate: photo.rotation,
-                    scale: 0.9,
-                  }}
-                  animate={{
-                    x: selectedPhoto === index ? 0 : photo.x,
-                    y: selectedPhoto === index ? 0 : (hoveredPhoto === index ? photo.y - 15 : photo.y),
-                    rotate: selectedPhoto === index ? 0 : (hoveredPhoto === index ? photo.rotation * 0.7 : photo.rotation),
-                    scale: selectedPhoto === index ? 1.2 : (hoveredPhoto === index ? 1.08 : selectedPhoto !== null ? 0.75 : 0.9),
-                    zIndex: selectedPhoto === index ? 50 : (hoveredPhoto === index ? 50 : 10 - index),
-                  }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 25,
-                  }}
-                  onHoverStart={() => setHoveredPhoto(index)}
-                  onHoverEnd={() => setHoveredPhoto(null)}
-                  onClick={() => setSelectedPhoto(selectedPhoto === index ? null : index)}
-                >
-                  <motion.div
-                    className="relative"
-                    style={{
-                      width: '280px',
-                      height: '350px',
-                    }}
-                    whileHover={{
-                      filter: 'brightness(1.05)',
-                    }}
-                >
-                    <img
-                      src={photo.src}
-                      alt={`Matt ${index + 1}`}
-                      className="w-full h-full object-cover rounded-lg"
-                      style={{
-                        boxShadow: selectedPhoto === index 
-                          ? '0 40px 80px -12px rgba(0, 0, 0, 0.6), 0 0 0 3px rgba(74, 222, 128, 0.4)'
-                          : '0 15px 35px -5px rgba(0, 0, 0, 0.4)',
-                        border: '4px solid rgba(255, 255, 255, 0.95)',
-                      }}
-                    />
-                    {/* Photo paper texture effect */}
-                    <div 
-                      className="absolute inset-0 rounded-lg pointer-events-none"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.05) 100%)',
-                        mixBlendMode: 'overlay',
-                      }}
-                    />
-                  </motion.div>
-                </motion.div>
-              ))}
-            </div>
-        </motion.div>
-      </motion.div>
-    </div>
+            <TiltGallery sectionRef={sectionRef} />
+          </div>
+        </div>
+      </div>
     </section>
   );
 };
