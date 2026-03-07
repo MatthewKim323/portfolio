@@ -1,4 +1,4 @@
-import { motion, useInView, useMotionValue, useTransform, MotionValue } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { useRef, useEffect } from 'react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 
@@ -21,7 +21,8 @@ const col1Imgs = allImages.filter((_, i) => i % 3 === 0);
 const col2Imgs = allImages.filter((_, i) => i % 3 === 1);
 const col3Imgs = allImages.filter((_, i) => i % 3 === 2);
 
-const looped = (arr: string[]) => [...arr, ...arr, ...arr];
+// 2× duplication — enough content without excess DOM nodes
+const looped = (arr: string[]) => [...arr, ...arr];
 const col1 = looped(col1Imgs);
 const col2 = looped(col2Imgs);
 const col3 = looped(col3Imgs);
@@ -29,71 +30,53 @@ const col3 = looped(col3Imgs);
 const IMG_H = 220;
 const GAP = 10;
 
-const ImageColumn = ({
-  images,
-  y,
-  startOffset = 0,
-}: {
-  images: string[];
-  y: MotionValue<number>;
-  startOffset?: number;
-}) => (
-  <motion.div
-    className="flex-1 min-w-0 flex flex-col"
-    style={{ y, marginTop: startOffset, gap: `${GAP}px` }}
-  >
-    {images.map((src, i) => (
-      <div
-        key={i}
-        className="w-full overflow-hidden rounded-xl shrink-0"
-        style={{ height: `${IMG_H}px` }}
-      >
-        <img
-          src={src}
-          alt=""
-          className="w-full h-full object-cover"
-          loading="lazy"
-          onError={(e) => {
-            (e.currentTarget.parentElement as HTMLElement).style.display = 'none';
-          }}
-        />
-      </div>
-    ))}
-  </motion.div>
-);
-
 const ScrollGallery = ({ sectionRef }: { sectionRef: React.RefObject<HTMLElement | null> }) => {
-  const progress = useMotionValue(0);
+  const col1Ref = useRef<HTMLDivElement>(null);
+  const col2Ref = useRef<HTMLDivElement>(null);
+  const col3Ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const container = document.querySelector('.scroll-container') as HTMLElement | null;
     if (!container) return;
+
+    let rafId: number;
 
     const update = () => {
       const section = sectionRef.current;
       if (!section) return;
 
       const containerRect = container.getBoundingClientRect();
-      const sectionRect = section.getBoundingClientRect();
+      const sectionRect  = section.getBoundingClientRect();
       const relTop = sectionRect.top - containerRect.top;
-      const viewH = container.clientHeight;
-      const secH = sectionRect.height;
+      const viewH  = container.clientHeight;
+      const secH   = sectionRect.height;
 
-      const p = (viewH - relTop) / (viewH + secH);
-      progress.set(Math.min(1, Math.max(0, p)));
+      const p = Math.min(1, Math.max(0, (viewH - relTop) / (viewH + secH)));
+
+      // Direct DOM write — bypasses React + Framer Motion overhead entirely
+      if (col1Ref.current) col1Ref.current.style.transform = `translateY(${p * -700}px)`;
+      if (col2Ref.current) col2Ref.current.style.transform = `translateY(${-320 + p * 700}px)`;
+      if (col3Ref.current) col3Ref.current.style.transform = `translateY(${p * -550}px)`;
     };
 
-    container.addEventListener('scroll', update, { passive: true });
-    update();
-    return () => container.removeEventListener('scroll', update);
-  }, [progress, sectionRef]);
+    const onScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(update);
+    };
 
-  const col1Y = useTransform(progress, [0, 1], [0, -700]);
-  const col2Y = useTransform(progress, [0, 1], [-320, 380]);
-  const col3Y = useTransform(progress, [0, 1], [0, -550]);
+    container.addEventListener('scroll', onScroll, { passive: true });
+    update(); // set initial position
+    return () => {
+      container.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, [sectionRef]);
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div
+      className="relative w-full h-full overflow-hidden"
+      style={{ contain: 'layout paint' }}
+    >
       {/* Top fade */}
       <div
         className="absolute inset-x-0 top-0 z-10 pointer-events-none"
@@ -106,9 +89,47 @@ const ScrollGallery = ({ sectionRef }: { sectionRef: React.RefObject<HTMLElement
       />
 
       <div className="flex h-full items-start" style={{ gap: `${GAP}px`, padding: '0 2px' }}>
-        <ImageColumn images={col1} y={col1Y} startOffset={-60} />
-        <ImageColumn images={col2} y={col2Y} startOffset={0} />
-        <ImageColumn images={col3} y={col3Y} startOffset={-130} />
+        {/* Column 1 — scrolls up */}
+        <div
+          ref={col1Ref}
+          className="flex-1 min-w-0 flex flex-col"
+          style={{ marginTop: '-60px', gap: `${GAP}px`, willChange: 'transform' }}
+        >
+          {col1.map((src, i) => (
+            <div key={i} className="w-full overflow-hidden rounded-xl shrink-0" style={{ height: `${IMG_H}px` }}>
+              <img src={src} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async"
+                onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Column 2 — scrolls down */}
+        <div
+          ref={col2Ref}
+          className="flex-1 min-w-0 flex flex-col"
+          style={{ gap: `${GAP}px`, willChange: 'transform' }}
+        >
+          {col2.map((src, i) => (
+            <div key={i} className="w-full overflow-hidden rounded-xl shrink-0" style={{ height: `${IMG_H}px` }}>
+              <img src={src} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async"
+                onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Column 3 — scrolls up (different speed) */}
+        <div
+          ref={col3Ref}
+          className="flex-1 min-w-0 flex flex-col"
+          style={{ marginTop: '-130px', gap: `${GAP}px`, willChange: 'transform' }}
+        >
+          {col3.map((src, i) => (
+            <div key={i} className="w-full overflow-hidden rounded-xl shrink-0" style={{ height: `${IMG_H}px` }}>
+              <img src={src} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async"
+                onError={(e) => { (e.currentTarget.parentElement as HTMLElement).style.display = 'none'; }} />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -117,16 +138,16 @@ const ScrollGallery = ({ sectionRef }: { sectionRef: React.RefObject<HTMLElement
 const About = () => {
   const { isDarkMode } = useDarkMode();
   const sectionRef = useRef<HTMLElement>(null);
-  const textRef = useRef(null);
-  const inView = useInView(textRef, { once: true, margin: '-20% 0px -20% 0px' });
+  const textRef    = useRef(null);
+  const inView     = useInView(textRef, { once: true, margin: '-20% 0px -20% 0px' });
 
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden:  { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden:  { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const } },
   };
 
@@ -205,7 +226,7 @@ const About = () => {
             <motion.div variants={itemVariants} className="mt-8 h-px w-16" style={{ backgroundColor: '#4ade80' }} />
           </motion.div>
 
-          {/* Right — Scroll Gallery, fades in with the section */}
+          {/* Right — Gallery, fades in on scroll */}
           <motion.div
             className="hidden md:block"
             style={{ height: '900px' }}
